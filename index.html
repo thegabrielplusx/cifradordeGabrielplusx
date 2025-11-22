@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cifrador🔐</title>
+    <link rel="stylesheet" href="../css/diseño.css">
+</head>
+<body class="dark-mode">
+    <div class="container">
+        <h1>Cifrador de Gabrielplusx🔐</h1>
+        <p class="instruccion"> **Mínimo 12 caracteres** para una mayor seguridad de la clave.🔒</p>
+        
+        <label for="texto-entrada">Texto Original / Cifrado:</label>
+        <textarea id="texto-entrada" placeholder="Ingresa el texto aquí (original para cifrar, cifrado para descifrar)..."></textarea>
+        
+        <label for="clave">Clave:</label>
+        <div class="key-input-container">
+            <input type="password" id="clave" placeholder="Ingresa la clave secreta">
+            <button type="button" id="togglePassword" class="toggle-password">
+                ◉
+            </button>
+        </div>
+        
+        <div class="actions">
+            <button id="btn-cifrar">Cifrar Mensaje</button>
+            <button id="btn-descifrar">Descifrar Mensaje</button>
+        </div>
+        
+        <label for="resultado">Resultado:</label>
+        <textarea id="resultado" placeholder="El resultado aparecerá aquí..." readonly></textarea>
+        
+        <button id="btn-descargar" class="download-button"> Descargar Archivo Cifrado</button>
+        <button id="btn-copiar" class="copy-button">Copiar</button>
+
+        <div class="creditos">
+            <p>Créditos a <strong>Gabriel plusx</strong></p>
+            <a href="https://github.com/thegabrielplusx" target="_blank" rel="noopener noreferrer">
+                <img src="../img/gabrielplusx.jpg" alt="Perfil de Gabriel plusx en GitHub" class="credit-image">
+            </a>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+        <script src="../js/logica.js"></script>
+    </div>
+
+</body>
+</html>
