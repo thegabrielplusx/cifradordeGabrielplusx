@@ -44,7 +44,7 @@ body.dark-mode {
     align-items: center;
 
     /* --- IMAGEN DE FONDO --- */
-    background-image: url('../img/walpaper.png');
+    background-image: url('walpaper.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -275,4 +275,5 @@ button:hover {
 .credit-image:hover {
     transform: scale(1.1);
     cursor: pointer;
+
 }
