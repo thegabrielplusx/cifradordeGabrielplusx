@@ -1,247 +1,337 @@
 /**
- * Lógica Criptográfica (AES-256 con PBKDF2 para derivación de clave)
- * Utiliza la librería CryptoJS.
+ * ============================================================================
+ * CIFRADOR DE GABRIELPLUSX - Lógica de Criptografía AES-256
+ * ============================================================================
+ * 
+ * Sistema de cifrado/descifrado utilizando:
+ * - AES-256 para encriptación simétrica
+ * - PBKDF2 para derivación segura de claves
+ * - Librería: CryptoJS
+ * 
+ * @author Gabriel plusx
+ 
  */
 
-// --- Obtener Elementos del DOM ---
-const textoEntrada = document.getElementById('texto-entrada');
-const claveInput = document.getElementById('clave');
-const resultado = document.getElementById('resultado');
-const btnCifrar = document.getElementById('btn-cifrar');
-const btnDescifrar = document.getElementById('btn-descifrar');
-const btnCopiar = document.getElementById('btn-copiar');
-const btnDescargar = document.getElementById('btn-descargar');
-const togglePasswordButton = document.getElementById('togglePassword'); // Toggle de visibilidad
+// ============================================================================
+// ELEMENTOS DEL DOM
+// ============================================================================
 
-// --- Constantes de Seguridad (PBKDF2 para derivación de clave) ---
-const MIN_CLAVE_LENGTH = 12; // Longitud mínima de la clave recomendada
-const SALT_SIZE = 128 / 8; // 16 bytes para el Salt (Vector de Inicialización IV)
-const KEY_SIZE = 256 / 32; // 8 words (256 bits para AES-256)
-const ITERATIONS = 1000;   // Rondas de hashing. Mínimo recomendado.
+const inputTextoOriginal = document.getElementById('texto-entrada');
+const inputClave = document.getElementById('clave');
+const areaResultado = document.getElementById('resultado');
+const botonCifrar = document.getElementById('btn-cifrar');
+const botonDescifrar = document.getElementById('btn-descifrar');
+const botonCopiar = document.getElementById('btn-copiar');
+const botonDescargar = document.getElementById('btn-descargar');
+const botonMostrarClave = document.getElementById('togglePassword');
 
-/**
- * Deriva una clave criptográfica fuerte utilizando PBKDF2.
- * @param {string} clave - La contraseña del usuario.
- * @param {CryptoJS.lib.WordArray} salt - El salt aleatorio.
- * @returns {CryptoJS.lib.WordArray} La clave derivada.
- */
-function deriveKey(clave, salt) {
-    return CryptoJS.PBKDF2(clave, salt, {
-        keySize: KEY_SIZE,
-        iterations: ITERATIONS
+// ============================================================================
+// CONSTANTES DE SEGURIDAD
+// ============================================================================
+
+const LONGITUD_MINIMA_CLAVE = 12;
+const TAMAÑO_SALT = 128 / 8;
+const TAMAÑO_CLAVE = 256 / 32;
+const ITERACIONES_PBKDF2 = 300000;
+const DELAY_ANIMACION = 400;
+const DURACION_ANIMACION = 800;
+
+// ============================================================================
+// FUNCIONES DE CRIPTOGRAFÍA
+// ============================================================================
+
+function derivarClave(contraseña, salt) {
+    return CryptoJS.PBKDF2(contraseña, salt, {
+        keySize: TAMAÑO_CLAVE,
+        iterations: ITERACIONES_PBKDF2
     });
 }
 
-// -----------------------------------------------------------------
-//                             Utilidades de Seguridad
-// -----------------------------------------------------------------
+// ============================================================================
+// FUNCIONES DE SEGURIDAD Y VALIDACIÓN
+// ============================================================================
 
-/**
- * Sanitiza una cadena de texto para prevenir ataques de Cross-Site Scripting (XSS).
- * Elimina cualquier código HTML y JavaScript, dejando solo texto plano.
- * @param {string} str - La cadena de texto a limpiar.
- * @returns {string} La cadena de texto sanitizada.
- */
-function sanitizeInput(str) {
-    if (!str) return '';
-    // Un método simple para escapar caracteres HTML especiales.
-    return str.replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;')
-              .replace(/"/g, '&quot;')
-              .replace(/'/g, '&#39;');
+function sanitizarTexto(textoSinSanitizar) {
+    if (!textoSinSanitizar) return '';
+
+    return textoSinSanitizar
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
-/**
- * Valida la entrada de la clave y el texto.
- * @param {string} texto - El texto de entrada (a cifrar o descifrar).
- * @param {string} clave - La clave ingresada por el usuario.
- * @returns {boolean} Retorna true si la validación falla.
- */
-function validateInput(texto, clave) {
+function validarEntrada(texto, clave) {
     if (!texto || !clave) {
-        resultado.value = "ERROR: ¡Ingresa el texto y la clave!";
+        mostrarError("ERROR: ¡Ingresa el texto y la clave!");
         return true;
     }
-    if (clave.length < MIN_CLAVE_LENGTH) {
-        resultado.value = `ERROR: La clave debe tener al menos ${MIN_CLAVE_LENGTH} caracteres.`;
+
+    if (clave.length < LONGITUD_MINIMA_CLAVE) {
+        mostrarError(`ERROR: La clave debe tener al menos ${LONGITUD_MINIMA_CLAVE} caracteres.`);
         return true;
     }
+
     return false;
 }
 
-// -----------------------------------------------------------------
-//                             Cifrado
-// -----------------------------------------------------------------
+function mostrarError(mensajeError) {
+    areaResultado.value = mensajeError;
+    areaResultado.classList.add('animacion-error');
 
-/**
- * Función principal para CIFRAR el mensaje.
- */
+    setTimeout(() => {
+        areaResultado.classList.remove('animacion-error');
+    }, DURACION_ANIMACION);
+}
+
+// ============================================================================
+// FUNCIÓN DE CIFRADO
+// ============================================================================
+
 function cifrarMensaje() {
-    // Aplicar SANITIZACIÓN a las entradas
-    const texto = sanitizeInput(textoEntrada.value); 
-    const clave = sanitizeInput(claveInput.value.trim()); 
+    const textoOriginal = sanitizarTexto(inputTextoOriginal.value);
+    const claveUsuario = sanitizarTexto(inputClave.value.trim());
 
-    if (validateInput(texto, clave)) {
+    if (validarEntrada(textoOriginal, claveUsuario)) {
         return;
     }
 
     try {
-        // 1. Generar un 'salt' aleatorio para seguridad y como IV.
-        const salt = CryptoJS.lib.WordArray.random(SALT_SIZE);
-        
-        // 2. Derivar la clave criptográfica a partir de la contraseña.
-        const key = deriveKey(clave, salt);
+        areaResultado.classList.add('animacion-cifrado');
+        areaResultado.value = 'Cifrando...';
 
-        // 3. Cifrar el mensaje con AES-256. El salt se usa como IV.
-        const cifrado = CryptoJS.AES.encrypt(texto, key, {
-            iv: salt
-        }).toString();
+        setTimeout(() => {
+            const saltAleatorio = CryptoJS.lib.WordArray.random(TAMAÑO_SALT);
+            const claveDerivada = derivarClave(claveUsuario, saltAleatorio);
+            const textoCifrado = CryptoJS.AES.encrypt(textoOriginal, claveDerivada, {
+                iv: saltAleatorio
+            }).toString();
 
-        // 4. Formato de salida: Base64(Salt) + "::" + Texto Cifrado.
-        const saltBase64 = CryptoJS.enc.Base64.stringify(salt);
-        const mensajeCompleto = saltBase64 + "::" + cifrado; 
-        
-        resultado.value = mensajeCompleto;
-        textoEntrada.value = ''; 
+            const saltBase64 = CryptoJS.enc.Base64.stringify(saltAleatorio);
+            const mensajeCompleto = saltBase64 + "::" + textoCifrado;
+
+            areaResultado.value = mensajeCompleto;
+            inputTextoOriginal.value = '';
+
+            setTimeout(() => {
+                areaResultado.classList.remove('animacion-cifrado');
+            }, DURACION_ANIMACION);
+        }, DELAY_ANIMACION);
 
     } catch (error) {
-        resultado.value = "ERROR al cifrar el mensaje. Verifique la entrada.";
+        mostrarError("ERROR al cifrar el mensaje. Verifique la entrada.");
+        areaResultado.classList.remove('animacion-cifrado');
         console.error("Error de cifrado:", error);
     }
 }
 
-// -----------------------------------------------------------------
-//                            Descifrado
-// -----------------------------------------------------------------
+// =============================================================g===============
+// FUNCIÓN DE DESCIFRADO
+// ============================================================================
 
-/**
- * Función principal para DESCIFRAR el mensaje.
- */
 function descifrarMensaje() {
-    // Aplicar SANITIZACIÓN a las entradas
-    const mensajeCompleto = sanitizeInput(textoEntrada.value) || sanitizeInput(resultado.value); 
-    const clave = sanitizeInput(claveInput.value.trim());
-    
-    if (validateInput(mensajeCompleto, clave)) {
+    const mensajeCifrado = sanitizarTexto(inputTextoOriginal.value) ||
+        sanitizarTexto(areaResultado.value);
+    const claveUsuario = sanitizarTexto(inputClave.value.trim());
+
+    if (validarEntrada(mensajeCifrado, claveUsuario)) {
         return;
     }
 
-    // Validación específica del formato cifrado
-    if (!mensajeCompleto.includes('::')) {
-        resultado.value = "ERROR: El texto cifrado debe contener el separador '::'.";
+    if (!mensajeCifrado.includes('::')) {
+        mostrarError("ERROR: El texto cifrado debe contener el separador '::'.");
         return;
     }
 
     try {
-        // 1. Separar el salt y el texto cifrado.
-        const partes = mensajeCompleto.split('::');
-        const saltBase64 = partes[0];
-        const textoCifrado = partes[1];
-        
-        // 2. Deserializar el salt para usarlo como IV y en PBKDF2.
-        const salt = CryptoJS.enc.Base64.parse(saltBase64);
-        
-        // 3. Derivar la clave con el mismo salt usado durante el cifrado.
-        const key = deriveKey(clave, salt);
-        
-        // 4. Descifrar el mensaje
-        const bytes = CryptoJS.AES.decrypt(textoCifrado, key, {
-            iv: salt
-        });
+        areaResultado.classList.add('animacion-descifrado');
+        areaResultado.value = 'Descifrando...';
 
-        const descifrado = bytes.toString(CryptoJS.enc.Utf8);
+        setTimeout(() => {
+            try {
+                const partesMensaje = mensajeCifrado.split('::');
+                const saltBase64 = partesMensaje[0];
+                const textoCifrado = partesMensaje[1];
 
-        if (descifrado.length === 0) {
-            resultado.value = "ERROR: Clave incorrecta o texto cifrado inválido/corrupto.";
-        } else {
-            resultado.value = descifrado;
-            textoEntrada.value = ''; 
-        }
+                const saltRecuperado = CryptoJS.enc.Base64.parse(saltBase64);
+                const claveDerivada = derivarClave(claveUsuario, saltRecuperado);
+
+                const bytesDescifrados = CryptoJS.AES.decrypt(textoCifrado, claveDerivada, {
+                    iv: saltRecuperado
+                });
+
+                const textoDescifrado = bytesDescifrados.toString(CryptoJS.enc.Utf8);
+
+                if (textoDescifrado.length === 0) {
+                    areaResultado.classList.remove('animacion-descifrado');
+                    mostrarError("ERROR: Clave incorrecta o texto cifrado inválido/corrupto.");
+                } else {
+                    areaResultado.value = textoDescifrado;
+                    inputTextoOriginal.value = '';
+
+                    setTimeout(() => {
+                        areaResultado.classList.remove('animacion-descifrado');
+                    }, DURACION_ANIMACION);
+                }
+
+            } catch (error) {
+                areaResultado.classList.remove('animacion-descifrado');
+                mostrarError("ERROR crítico al descifrar. Verifique la clave y el mensaje.");
+                console.error("Error de descifrado:", error);
+            }
+        }, DELAY_ANIMACION);
 
     } catch (error) {
-        resultado.value = "ERROR crítico al descifrar. Verifique la clave y el mensaje.";
+        areaResultado.classList.remove('animacion-descifrado');
+        mostrarError("ERROR crítico al descifrar. Verifique la clave y el mensaje.");
         console.error("Error de descifrado:", error);
     }
 }
 
-// -----------------------------------------------------------------
-//                             Utilidades
-// -----------------------------------------------------------------
+// ============================================================================
+// FUNCIONES DE UTILIDAD
+// ============================================================================
 
-/**
- * Copia el contenido del área de resultado al portapapeles.
- */
 function copiarResultado() {
-    resultado.select();
-    resultado.setSelectionRange(0, 99999);
-    
-    // Uso moderno del API de portapapeles (navigator.clipboard) recomendado, pero se mantiene execCommand por compatibilidad.
-    document.execCommand("copy"); 
+    areaResultado.select();
+    areaResultado.setSelectionRange(0, 99999);
+    document.execCommand("copy");
 
-    // Feedback visual al usuario
-    const valorOriginal = btnCopiar.textContent;
-    btnCopiar.textContent = "¡Copiado!";
+    const textoOriginalBoton = botonCopiar.textContent;
+    botonCopiar.textContent = "¡Copiado!";
+
     setTimeout(() => {
-        btnCopiar.textContent = valorOriginal;
+        botonCopiar.textContent = textoOriginalBoton;
     }, 1500);
 }
 
-/**
- * Descarga el texto cifrado como un archivo de texto (.txt).
- */
-function descargarMensajeCifrado() {
-    const textoParaDescargar = resultado.value;
+function descargarComoTXT(contenido) {
+    const archivoBlob = new Blob([contenido], {
+        type: 'text/plain;charset=utf-8'
+    });
 
-    if (!textoParaDescargar || !textoParaDescargar.includes('::')) {
+    const urlDescarga = URL.createObjectURL(archivoBlob);
+    const enlaceDescarga = document.createElement('a');
+
+    enlaceDescarga.href = urlDescarga;
+    enlaceDescarga.download = 'encrypted_message.txt';
+
+    document.body.appendChild(enlaceDescarga);
+    enlaceDescarga.click();
+
+    document.body.removeChild(enlaceDescarga);
+    URL.revokeObjectURL(urlDescarga);
+}
+
+function descargarComoPDF(contenido) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const margenIzquierdo = 15;
+    const margenSuperior = 20;
+    const anchoMaximo = 180;
+    const alturaLinea = 7;
+
+    // Título anónimo
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('ENCRYPTED MESSAGE', margenIzquierdo, margenSuperior);
+
+    // Línea separadora
+    doc.setLineWidth(0.5);
+    doc.line(margenIzquierdo, margenSuperior + 5, margenIzquierdo + anchoMaximo, margenSuperior + 5);
+
+    // Información técnica sin datos identificables
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.text('Algorithm: AES-256', margenIzquierdo, margenSuperior + 15);
+    doc.text('Key Derivation: PBKDF2', margenIzquierdo, margenSuperior + 21);
+
+    // Advertencia de seguridad
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'italic');
+    doc.text('Keep this file secure. Do not share without encryption key.', margenIzquierdo, margenSuperior + 30);
+
+    // Etiqueta del contenido
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold');
+    doc.text('ENCRYPTED DATA:', margenIzquierdo, margenSuperior + 40);
+
+    // Contenido cifrado
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(8);
+    const lineasTexto = doc.splitTextToSize(contenido, anchoMaximo);
+
+    let posicionY = margenSuperior + 48;
+
+    lineasTexto.forEach((linea) => {
+        if (posicionY > 280) {
+            doc.addPage();
+            posicionY = 20;
+        }
+        doc.text(linea, margenIzquierdo, posicionY);
+        posicionY += alturaLinea;
+    });
+
+    // Guardar con nombre anónimo
+    doc.save('encrypted_data.pdf');
+}
+
+function descargarMensajeCifrado() {
+    const contenidoDescarga = areaResultado.value;
+
+    if (!contenidoDescarga || !contenidoDescarga.includes('::')) {
         alert("Primero debe CIFRAR un mensaje para descargar el texto cifrado.");
         return;
     }
 
-    // Creación dinámica de Blob para descarga
-    const blob = new Blob([textoParaDescargar], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    
-    a.href = url;
-    a.download = 'mensaje_cifrado_aes.txt';
-    
-    document.body.appendChild(a);
-    a.click();
-    
-    // Limpieza de elementos y recursos
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const formato = prompt(
+        "¿En qué formato deseas descargar el archivo?\n\n" +
+        "Escribe:\n" +
+        "• 'txt' para archivo de texto (.txt)\n" +
+        "• 'pdf' para documento PDF (.pdf)",
+        "txt"
+    );
+
+    if (!formato) {
+        return;
+    }
+
+    const formatoLower = formato.toLowerCase().trim();
+
+    if (formatoLower === 'txt') {
+        descargarComoTXT(contenidoDescarga);
+    } else if (formatoLower === 'pdf') {
+        descargarComoPDF(contenidoDescarga);
+    } else {
+        alert("Formato no válido. Por favor, escribe 'txt' o 'pdf'.");
+    }
 }
 
-/**
- * Configura la funcionalidad del botón 'Toggle Password'.
- */
-function setupPasswordToggle() {
-    if (togglePasswordButton) {
-        togglePasswordButton.addEventListener('click', function() {
-            // Alternar el tipo de atributo entre 'password' y 'text'
-            const type = claveInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            claveInput.setAttribute('type', type);
-            
-            // Cambiar el ícono ('●' para mostrar, '○' para ocultar)
-            this.textContent = type === 'text' ? '○' : '●'; 
+function configurarMostrarClave() {
+    if (botonMostrarClave) {
+        botonMostrarClave.addEventListener('click', function () {
+            const tipoActual = inputClave.getAttribute('type');
+            const nuevoTipo = tipoActual === 'password' ? 'text' : 'password';
+            inputClave.setAttribute('type', nuevoTipo);
+
+            this.textContent = nuevoTipo === 'text' ? '○' : '●';
         });
     }
 }
 
-// -----------------------------------------------------------------
-//                           Inicialización
-// -----------------------------------------------------------------
+// ============================================================================
+// INICIALIZACIÓN DE LA APLICACIÓN
+// ============================================================================
 
-// Asignación de Event Handlers
-btnCifrar.addEventListener('click', cifrarMensaje);
-btnDescifrar.addEventListener('click', descifrarMensaje);
-btnCopiar.addEventListener('click', copiarResultado);
-btnDescargar.addEventListener('click', descargarMensajeCifrado);
+botonCifrar.addEventListener('click', cifrarMensaje);
+botonDescifrar.addEventListener('click', descifrarMensaje);
+botonCopiar.addEventListener('click', copiarResultado);
+botonDescargar.addEventListener('click', descargarMensajeCifrado);
 
-// Configurar el 'ojito'
-setupPasswordToggle();
+configurarMostrarClave();
 
 
-//Créditos a Gabriel plusx
+// Créditos: Gabriel plusx
+// GitHub: https://github.com/thegabrielplusx
