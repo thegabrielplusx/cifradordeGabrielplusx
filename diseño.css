@@ -29,7 +29,9 @@
    ESTILOS GENERALES
    ========================================= */
 
-* {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -42,29 +44,29 @@ body.dark-mode {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 10px;
 
-    /* --- IMAGEN DE FONDO --- */
+    /* Imagen de fondo */
     background-image: url('walpaper.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
     background-repeat: no-repeat;
-    padding: 10px;
 }
 
 /* Capa oscura sobre la imagen */
 body.dark-mode::before {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background-color: var(--bg-overlay);
     z-index: -1;
 }
 
-/* --- Contenedor Principal --- */
+/* =========================================
+   CONTENEDOR PRINCIPAL
+   ========================================= */
+
 .container {
     width: 100%;
     max-width: 500px;
@@ -78,23 +80,23 @@ body.dark-mode::before {
     margin: 20px 0;
 }
 
-/* 
-   TÍTULO H1
-   */
+/* =========================================
+   TIPOGRAFÍA
+   ========================================= */
+
 h1 {
     margin-bottom: 8px;
     font-size: 1.8rem;
 
-    /* OPCIÓN A: MANTENER EL DEGRADADO (Estilo actual) */
-   background: -webkit-linear-gradient(45deg, #ff0000, #ffff00);
+    /* Degradado de texto con compatibilidad */
+    background: linear-gradient(45deg, #ff0000, #ffff00);
+    background: -webkit-linear-gradient(45deg, #ff0000, #ffff00);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
-
-    /* OPCIÓN B: COLOR SÓLIDO (Descomenta y edita si lo prefieres) */
-    /* color: #ffffff; */
+    color: transparent;
 }
 
-/* Aplicar un tamaño de fuente más grande en pantallas de escritorio */
 @media (min-width: 768px) {
     h1 {
         font-size: 2rem;
@@ -108,20 +110,28 @@ h1 {
     line-height: 1.4;
 }
 
-/* --- Entradas y Textareas --- */
 label {
     display: block;
     text-align: left;
     margin-bottom: 5px;
     font-weight: bold;
 
-    /* 🎨 DEGRADADO ROJO-AMARILLO SOLICITADO */
+    /* Degradado de texto con compatibilidad */
+    background: linear-gradient(45deg, #ff0000, #ffff00);
     background: -webkit-linear-gradient(45deg, #ff0000, #ffff00);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
+    color: transparent;
 }
 
-textarea, input[type="password"], input[type="text"] {
+/* =========================================
+   INPUTS Y TEXTAREAS
+   ========================================= */
+
+textarea,
+input[type="password"],
+input[type="text"] {
     width: 100%;
     background-color: var(--input-bg);
     border: 1px solid var(--input-border);
@@ -130,11 +140,12 @@ textarea, input[type="password"], input[type="text"] {
     border-radius: 8px;
     font-size: 0.95rem;
     margin-bottom: 12px;
-    transition: border-color 0.3s;
+    transition: border-color 0.3s ease;
     font-family: monospace;
 }
 
-textarea:focus, input:focus {
+textarea:focus,
+input:focus {
     outline: none;
     border-color: var(--input-focus);
     box-shadow: 0 0 8px rgba(79, 172, 254, 0.3);
@@ -145,7 +156,19 @@ textarea {
     resize: vertical;
 }
 
-/* --- Contenedor de la Clave --- */
+#resultado {
+    background-color: rgba(0, 0, 0, 0.3);
+    color: #8aff8a;
+    font-weight: 500;
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* =========================================
+   CONTENEDOR DE CLAVE
+   ========================================= */
+
 .key-input-container {
     display: flex;
     position: relative;
@@ -171,6 +194,7 @@ textarea {
     width: auto;
     color: #ccc;
     z-index: 10;
+    transition: all 0.2s ease;
 }
 
 .toggle-password:hover {
@@ -178,7 +202,10 @@ textarea {
     color: white;
 }
 
-/* --- Botones --- */
+/* =========================================
+   BOTONES
+   ========================================= */
+
 .actions {
     display: flex;
     flex-direction: column;
@@ -186,7 +213,6 @@ textarea {
     margin-bottom: 15px;
 }
 
-/* En pantallas más grandes (Tablets y Desktop), poner los botones en una fila */
 @media (min-width: 600px) {
     .actions {
         flex-direction: row;
@@ -200,13 +226,17 @@ button {
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
-    transition: transform 0.2s, filter 0.2s;
+    transition: transform 0.2s ease, filter 0.2s ease;
     color: white;
     font-size: 1rem;
 }
 
 button:active {
     transform: scale(0.98);
+}
+
+button:hover {
+    filter: brightness(1.1);
 }
 
 #btn-cifrar {
@@ -228,24 +258,10 @@ button:active {
     margin-top: 5px;
 }
 
-button:hover {
-    filter: brightness(1.1);
-}
-
-#resultado {
-    background-color: rgba(0, 0, 0, 0.3);
-    color: #8aff8a;
-    font-weight: 500;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: left;
-    white-space: pre-wrap;
-    word-break: break-all;
-}
-
 /* =========================================
-   CRÉDITOS (Dentro del contenedor)
+   CRÉDITOS
    ========================================= */
+
 .creditos {
     margin-top: 25px;
     padding-top: 15px;
@@ -260,7 +276,6 @@ button:hover {
     font-size: 1em;
 }
 
-/* --- ESTILOS DE LA IMAGEN DE CRÉDITOS AÑADIDOS --- */
 .credit-image {
     width: 50px;
     height: 50px;
@@ -275,5 +290,83 @@ button:hover {
 .credit-image:hover {
     transform: scale(1.1);
     cursor: pointer;
+}
 
+/* =========================================
+   ANIMACIONES
+   ========================================= */
+
+/* Animación de cifrado (azul) */
+@keyframes pulse-glow {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(79, 172, 254, 0);
+    }
+
+    50% {
+        transform: scale(1.02);
+        box-shadow:
+            0 0 20px rgba(79, 172, 254, 0.6),
+            0 0 40px rgba(79, 172, 254, 0.4);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(79, 172, 254, 0);
+    }
+}
+
+.animacion-cifrado {
+    animation: pulse-glow 0.8s ease-in-out;
+    border-color: var(--input-focus) !important;
+}
+
+/* Animación de error (rojo) */
+@keyframes pulse-glow-error {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(255, 0, 0, 0);
+    }
+
+    50% {
+        transform: scale(1.02);
+        box-shadow:
+            0 0 20px rgba(255, 0, 0, 0.6),
+            0 0 40px rgba(255, 0, 0, 0.4);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(255, 0, 0, 0);
+    }
+}
+
+.animacion-error {
+    animation: pulse-glow-error 0.8s ease-in-out;
+    border-color: #ff0000 !important;
+}
+
+/* Animación de descifrado (verde) */
+@keyframes pulse-glow-decrypt {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(56, 239, 125, 0);
+    }
+
+    50% {
+        transform: scale(1.02);
+        box-shadow:
+            0 0 20px rgba(56, 239, 125, 0.6),
+            0 0 40px rgba(56, 239, 125, 0.4);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(56, 239, 125, 0);
+    }
+}
+
+.animacion-descifrado {
+    animation: pulse-glow-decrypt 0.8s ease-in-out;
+    border-color: #38ef7d !important;
 }
